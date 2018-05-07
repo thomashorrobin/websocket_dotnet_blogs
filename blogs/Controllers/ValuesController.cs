@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using blogs_mysql;
 
 namespace blogs.Controllers
 {
@@ -11,9 +12,11 @@ namespace blogs.Controllers
     {
         // GET api/values
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IEnumerable<Blogs> Get()
         {
-            return new string[] { "value1", "value2" };
+            using(blogsContext dbContext = new blogsContext()){
+                return dbContext.Blogs.ToList();
+            }
         }
 
         // GET api/values/5
