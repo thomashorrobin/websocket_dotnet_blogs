@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "blogs", "blogs\blogs.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "blogs_mysql", "blogs_mysql\blogs_mysql.csproj", "{48F6258F-8D2B-44B2-A17E-4E5BF1A795D3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "blog_websocket", "blog_websocket\blog_websocket.csproj", "{5F995D72-85ED-432D-ADAA-20F3D121D320}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,5 +21,9 @@ Global
 		{48F6258F-8D2B-44B2-A17E-4E5BF1A795D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{48F6258F-8D2B-44B2-A17E-4E5BF1A795D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{48F6258F-8D2B-44B2-A17E-4E5BF1A795D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F995D72-85ED-432D-ADAA-20F3D121D320}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F995D72-85ED-432D-ADAA-20F3D121D320}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F995D72-85ED-432D-ADAA-20F3D121D320}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F995D72-85ED-432D-ADAA-20F3D121D320}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
