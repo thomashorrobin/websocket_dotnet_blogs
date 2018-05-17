@@ -13,4 +13,10 @@
     <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="ExacutableActionWrapper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\blogs_mysql\blogs_mysql.csproj" />
+  </ItemGroup>
 </Project>

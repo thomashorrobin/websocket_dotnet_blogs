@@ -15,7 +15,7 @@ namespace blogs_mysql
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseMySql("Server=localhost;User Id=root;Password=podsaveamerica;Database=blogs");
+				optionsBuilder.UseMySql("Server=localhost;User Id=root;oldguids=true;Password=podsaveamerica;Database=blogs");
             }
         }
 

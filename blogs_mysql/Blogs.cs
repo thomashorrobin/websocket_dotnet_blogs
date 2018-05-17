@@ -10,7 +10,7 @@ namespace blogs_mysql
             Blogposts = new HashSet<Blogposts>();
         }
 
-        public Guid Id { get; set; }
+		public Guid Id { get; set; }
         public string Name { get; set; }
 
         public ICollection<Blogposts> Blogposts { get; set; }

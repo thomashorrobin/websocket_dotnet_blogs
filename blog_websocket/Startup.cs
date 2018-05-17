@@ -10,23 +10,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using blogs_mysql;
 
 namespace blog_websocket
 {
     public class Startup
-    {
-        private int messageCount = 0;
-
-        private string messageReply(string message)
-        {
-            return string.Format("Message number {0} is {1}", messageCount++, message);
-        }
-
-        private MessageObject defaultMessage(MessageObject messageObject)
-        {
-            return new MessageObject(messageReply(messageObject.Message));
-        }
-
+    {      
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
@@ -82,31 +72,54 @@ namespace blog_websocket
             {
                 string receiveString = System.Text.Encoding.UTF8.GetString(buffer, 0, buffer.Length);
 
-                MessageObject messageObject = JsonConvert.DeserializeObject<MessageObject>(receiveString);
+				JObject jObject = JObject.Parse(receiveString);
 
-                buffer = System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(defaultMessage(messageObject)));
+				await ReceiveStruturedWebSocketObjectAsync(webSocket, jObject);
 
-                await webSocket.SendAsync(new ArraySegment<byte>(buffer, 0, buffer.Length), WebSocketMessageType.Text, result.EndOfMessage, CancellationToken.None);
-
-				buffer = new byte[1024 * 4];
-
+				buffer = new byte[1024 * 4];            
                 result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             }
             await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
         }
 
+		public static async Task SendObjectAsync<T>(WebSocket webSocket, T obj)
+		{
+			byte[] sendBuffer = new byte[1024 * 4];
+			WebSocketObjectWrapper<T> webSocketObjectWrapper = new WebSocketObjectWrapper<T>(obj, Actions.ADD_OR_REPLACE, BlogObjects.BLOG);
+			sendBuffer = System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(webSocketObjectWrapper, new Newtonsoft.Json.Converters.StringEnumConverter()));
+			await webSocket.SendAsync(new ArraySegment<byte>(sendBuffer, 0, sendBuffer.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+		}
+
+		public static async Task ReceiveStruturedWebSocketObjectAsync(WebSocket webSocket, JObject webSocketJson){
+			switch ((MessageType)Enum.Parse(typeof(MessageType), webSocketJson["messageType"].ToString()))
+			{
+                case MessageType.REQUEST:
+                    using (blogsContext dbContext = new blogsContext())
+                    {
+                        foreach (var blog in dbContext.Blogs)
+                        {
+                            await SendObjectAsync(webSocket, blog);
+                        }
+                    }
+                    break;
+                case MessageType.BUSINESS_OBJECT:
+					var x = webSocketJson.ToObject<WebSocketObjectWrapper<Blogs>>(); //JsonConvert.DeserializeObject<WebSocketObjectWrapper<Blogs>>(receiveString);
+                    if (x.Action == Actions.CREATE)
+                    {
+                        Blogs blog = x.Obj;
+                        blog.Id = Guid.NewGuid();
+                        using (blogsContext dbContext = new blogsContext())
+                        {
+                            dbContext.Blogs.Add(blog);
+                            Task t1 = dbContext.SaveChangesAsync();
+                            Task t2 = SendObjectAsync(webSocket, blog);
+                            Task.WaitAll(t1, t2);
+                        }
+                    }
+                    break;
+				default:
+					break;
+			}
+		}
     }
-
-    public class MessageObject
-    {
-        public MessageObject(string message){
-            Message = message;
-        }
-
-        public string Message
-        {
-            get;
-            set;
-        }
-    } 
 }
