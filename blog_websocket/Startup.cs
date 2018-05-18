@@ -153,6 +153,22 @@ namespace blog_websocket
                                 }
                             }
 							break;
+						case BlogObjects.POST:
+							var postWrapper = webSocketJson.ToObject<WebSocketObjectWrapper<Blogposts>>();
+							if (postWrapper.Action == Actions.CREATE)
+                            {
+								Blogposts post = postWrapper.Obj;
+								post.Id = Guid.NewGuid();
+								post.DatePosted = DateTime.Now;
+                                using (blogsContext dbContext = new blogsContext())
+                                {
+									dbContext.Blogposts.Add(post);
+                                    Task t1 = dbContext.SaveChangesAsync();
+									Task t2 = SendObjectAsync(webSocket, post, BlogObjects.POST);
+                                    Task.WaitAll(t1, t2);
+                                }
+                            }
+                            break;
 						default:
 							break;
 					}
