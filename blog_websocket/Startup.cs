@@ -82,10 +82,10 @@ namespace blog_websocket
             await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
         }
 
-		public static async Task SendObjectAsync<T>(WebSocket webSocket, T obj)
+		public static async Task SendObjectAsync<T>(WebSocket webSocket, T obj, BlogObjects blogObjects)
 		{
 			byte[] sendBuffer = new byte[1024 * 4];
-			WebSocketObjectWrapper<T> webSocketObjectWrapper = new WebSocketObjectWrapper<T>(obj, Actions.ADD_OR_REPLACE, BlogObjects.BLOG);
+			WebSocketObjectWrapper<T> webSocketObjectWrapper = new WebSocketObjectWrapper<T>(obj, Actions.ADD_OR_REPLACE, blogObjects);
 			sendBuffer = System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(webSocketObjectWrapper, new Newtonsoft.Json.Converters.StringEnumConverter()));
 			await webSocket.SendAsync(new ArraySegment<byte>(sendBuffer, 0, sendBuffer.Length), WebSocketMessageType.Text, true, CancellationToken.None);
 		}
@@ -96,26 +96,66 @@ namespace blog_websocket
                 case MessageType.REQUEST:
                     using (blogsContext dbContext = new blogsContext())
                     {
-                        foreach (var blog in dbContext.Blogs)
-                        {
-                            await SendObjectAsync(webSocket, blog);
-                        }
+						switch ((BlogObjects)Enum.Parse(typeof(BlogObjects), webSocketJson["className"].ToString()))
+						{
+							case BlogObjects.BLOG:
+                                foreach (var blog in dbContext.Blogs)
+                                {
+                                    await SendObjectAsync(webSocket, blog, BlogObjects.BLOG);
+                                }
+								break;
+							case BlogObjects.AUTHOR:
+                                foreach (var author in dbContext.People)
+                                {
+									await SendObjectAsync(webSocket, author, BlogObjects.AUTHOR);
+                                }
+								break;
+                            case BlogObjects.POST:
+                                foreach (var post in dbContext.Blogposts)
+                                {
+									await SendObjectAsync(webSocket, post, BlogObjects.POST);
+                                }
+                                break;
+							default:
+								break;
+						}
                     }
                     break;
                 case MessageType.BUSINESS_OBJECT:
-					var x = webSocketJson.ToObject<WebSocketObjectWrapper<Blogs>>(); //JsonConvert.DeserializeObject<WebSocketObjectWrapper<Blogs>>(receiveString);
-                    if (x.Action == Actions.CREATE)
-                    {
-                        Blogs blog = x.Obj;
-                        blog.Id = Guid.NewGuid();
-                        using (blogsContext dbContext = new blogsContext())
-                        {
-                            dbContext.Blogs.Add(blog);
-                            Task t1 = dbContext.SaveChangesAsync();
-                            Task t2 = SendObjectAsync(webSocket, blog);
-                            Task.WaitAll(t1, t2);
-                        }
-                    }
+					switch ((BlogObjects)Enum.Parse(typeof(BlogObjects), webSocketJson["className"].ToString())){
+						case BlogObjects.BLOG:
+                            var x = webSocketJson.ToObject<WebSocketObjectWrapper<Blogs>>(); //JsonConvert.DeserializeObject<WebSocketObjectWrapper<Blogs>>(receiveString);
+                            if (x.Action == Actions.CREATE)
+                            {
+                                Blogs blog = x.Obj;
+                                blog.Id = Guid.NewGuid();
+                                using (blogsContext dbContext = new blogsContext())
+                                {
+                                    dbContext.Blogs.Add(blog);
+                                    Task t1 = dbContext.SaveChangesAsync();
+                                    Task t2 = SendObjectAsync(webSocket, blog, BlogObjects.BLOG);
+                                    Task.WaitAll(t1, t2);
+                                }
+                            }
+							break;
+						case BlogObjects.AUTHOR:
+                            var authorWrapper = webSocketJson.ToObject<WebSocketObjectWrapper<People>>(); //JsonConvert.DeserializeObject<WebSocketObjectWrapper<Blogs>>(receiveString);
+							if (authorWrapper.Action == Actions.CREATE)
+                            {
+								People person = authorWrapper.Obj;
+								person.Id = Guid.NewGuid();
+                                using (blogsContext dbContext = new blogsContext())
+                                {
+									dbContext.People.Add(person);
+                                    Task t1 = dbContext.SaveChangesAsync();
+									Task t2 = SendObjectAsync(webSocket, person, BlogObjects.AUTHOR);
+                                    Task.WaitAll(t1, t2);
+                                }
+                            }
+							break;
+						default:
+							break;
+					}
                     break;
 				default:
 					break;
