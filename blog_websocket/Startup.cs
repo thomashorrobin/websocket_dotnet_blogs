@@ -66,6 +66,7 @@ namespace blog_websocket
 
         private async Task Echo(HttpContext context, WebSocket webSocket)
         {
+			await SendInitialDataAsync(webSocket);
             var buffer = new byte[1024 * 4];
             WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             while (!result.CloseStatus.HasValue)
@@ -81,6 +82,24 @@ namespace blog_websocket
             }
             await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
         }
+
+		public static async Task SendInitialDataAsync(WebSocket webSocket){
+			using (blogsContext dbContext = new blogsContext())
+			{
+                foreach (var blog in dbContext.Blogs)
+                {
+                    await SendObjectAsync(webSocket, blog, BlogObjects.BLOG);
+				}
+                foreach (var author in dbContext.People)
+                {
+                    await SendObjectAsync(webSocket, author, BlogObjects.AUTHOR);
+				}
+                foreach (var post in dbContext.Blogposts)
+                {
+                    await SendObjectAsync(webSocket, post, BlogObjects.POST);
+                }
+			}
+		}
 
 		public static async Task SendObjectAsync<T>(WebSocket webSocket, T obj, BlogObjects blogObjects)
 		{
