@@ -94,10 +94,10 @@ namespace blog_websocket
                 {
                     await SendObjectAsync(webSocket, author, BlogObjects.AUTHOR);
 				}
-                foreach (var post in dbContext.Blogposts)
-                {
-                    await SendObjectAsync(webSocket, post, BlogObjects.POST);
-                }
+                //foreach (var post in dbContext.Blogposts)
+                //{
+                //    await SendObjectAsync(webSocket, post, BlogObjects.POST);
+                //}
 			}
 		}
 
@@ -112,34 +112,6 @@ namespace blog_websocket
 		public static async Task ReceiveStruturedWebSocketObjectAsync(WebSocket webSocket, JObject webSocketJson){
 			switch ((MessageType)Enum.Parse(typeof(MessageType), webSocketJson["messageType"].ToString()))
 			{
-                case MessageType.REQUEST:
-                    using (blogsContext dbContext = new blogsContext())
-                    {
-						switch ((BlogObjects)Enum.Parse(typeof(BlogObjects), webSocketJson["className"].ToString()))
-						{
-							case BlogObjects.BLOG:
-                                foreach (var blog in dbContext.Blogs)
-                                {
-                                    await SendObjectAsync(webSocket, blog, BlogObjects.BLOG);
-                                }
-								break;
-							case BlogObjects.AUTHOR:
-                                foreach (var author in dbContext.People)
-                                {
-									await SendObjectAsync(webSocket, author, BlogObjects.AUTHOR);
-                                }
-								break;
-                            case BlogObjects.POST:
-                                foreach (var post in dbContext.Blogposts)
-                                {
-									await SendObjectAsync(webSocket, post, BlogObjects.POST);
-                                }
-                                break;
-							default:
-								break;
-						}
-                    }
-                    break;
                 case MessageType.BUSINESS_OBJECT:
 					switch ((BlogObjects)Enum.Parse(typeof(BlogObjects), webSocketJson["className"].ToString())){
 						case BlogObjects.BLOG:
