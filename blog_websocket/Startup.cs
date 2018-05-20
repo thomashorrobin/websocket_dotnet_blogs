@@ -94,10 +94,10 @@ namespace blog_websocket
                 {
                     await SendObjectAsync(webSocket, author, BlogObjects.AUTHOR);
 				}
-                //foreach (var post in dbContext.Blogposts)
-                //{
-                //    await SendObjectAsync(webSocket, post, BlogObjects.POST);
-                //}
+                foreach (var post in dbContext.Blogposts)
+                {
+                    await SendObjectAsync(webSocket, post, BlogObjects.POST);
+                }
 			}
 		}
 
@@ -123,9 +123,8 @@ namespace blog_websocket
                                 using (blogsContext dbContext = new blogsContext())
                                 {
                                     dbContext.Blogs.Add(blog);
-                                    Task t1 = dbContext.SaveChangesAsync();
-                                    Task t2 = SendObjectAsync(webSocket, blog, BlogObjects.BLOG);
-                                    Task.WaitAll(t1, t2);
+                                    await dbContext.SaveChangesAsync();
+                                    await SendObjectAsync(webSocket, blog, BlogObjects.BLOG);
                                 }
                             }
 							break;
@@ -138,9 +137,8 @@ namespace blog_websocket
                                 using (blogsContext dbContext = new blogsContext())
                                 {
 									dbContext.People.Add(person);
-                                    Task t1 = dbContext.SaveChangesAsync();
-									Task t2 = SendObjectAsync(webSocket, person, BlogObjects.AUTHOR);
-                                    Task.WaitAll(t1, t2);
+                                    await dbContext.SaveChangesAsync();
+									await SendObjectAsync(webSocket, person, BlogObjects.AUTHOR);
                                 }
                             }
 							break;
@@ -154,9 +152,8 @@ namespace blog_websocket
                                 using (blogsContext dbContext = new blogsContext())
                                 {
 									dbContext.Blogposts.Add(post);
-                                    Task t1 = dbContext.SaveChangesAsync();
-									Task t2 = SendObjectAsync(webSocket, post, BlogObjects.POST);
-                                    Task.WaitAll(t1, t2);
+									await dbContext.SaveChangesAsync();
+									await SendObjectAsync(webSocket, post, BlogObjects.POST);
                                 }
                             }
                             break;

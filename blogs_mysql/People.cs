@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace blogs_mysql
 {
@@ -19,6 +20,7 @@ namespace blogs_mysql
 			}
 		}
 
+		[JsonIgnore]
         public ICollection<Blogposts> Blogposts { get; set; }
     }
 }
