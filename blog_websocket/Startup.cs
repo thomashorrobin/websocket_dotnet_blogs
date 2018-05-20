@@ -67,20 +67,16 @@ namespace blog_websocket
         private async Task Echo(HttpContext context, WebSocket webSocket)
         {
 			await SendInitialDataAsync(webSocket);
-            var buffer = new byte[1024 * 4];
-            WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            while (!result.CloseStatus.HasValue)
-            {
-                string receiveString = System.Text.Encoding.UTF8.GetString(buffer, 0, buffer.Length);
-
-				JObject jObject = JObject.Parse(receiveString);
-
-				await ReceiveStruturedWebSocketObjectAsync(webSocket, jObject);
-
-				buffer = new byte[1024 * 4];            
-                result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            }
-            await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+			WebSocketReceiveResult result;
+            do
+			{
+				var buffer = new byte[1024 * 4];
+				result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                string receiveString = System.Text.Encoding.UTF8.GetString(buffer, 0, buffer.Length);            
+                JObject jObject = JObject.Parse(receiveString);            
+                await ReceiveStruturedWebSocketObjectAsync(webSocket, jObject);
+			} while (!result.CloseStatus.HasValue);
+			await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
         }
 
 		public static async Task SendInitialDataAsync(WebSocket webSocket){
